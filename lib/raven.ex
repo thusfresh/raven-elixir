@@ -149,6 +149,46 @@ defmodule Raven do
   end
 
   @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Request: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :request, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Server: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :server, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Service: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :service, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Operation: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :operation, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Arguments: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :arguments, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Context: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :context, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Startup: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :startup, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
+  def transform(["Id: " <> args|t], state) do
+    transform(t, put_in(state.extra, Map.put_new(state.extra, :id, args)))
+  end
+
+  @spec transform([String.t], %Event{}) :: %Event{}
   def transform(["    Args: " <> args|t], state) do
     transform(t, put_in(state.extra, Map.put_new(state.extra, :args, args)))
   end
@@ -211,7 +251,7 @@ defmodule Raven do
       state = %{state | culprit: function}
     end
 
-    state = put_in(state.stacktrace.frames, state.stacktrace.frames ++ [%{
+    frame = %{
       filename: filename,
       function: function,
       module: nil,
@@ -223,8 +263,8 @@ defmodule Raven do
       post_context: nil,
       in_app: not app in ["stdlib", "elixir"],
       vars: %{},
-    }])
-
+    }
+    state = put_in(state.stacktrace.frames, [frame | state.stacktrace.frames])
     transform(t, state)
   end
 
