@@ -236,17 +236,26 @@ defmodule Raven do
   ## Private
 
   defp transform_first_stacktrace_line([message|t], state) do
-    [_, type, value] = Regex.run(~r/^\((.+?)\) (.+)$/, message)
-    transform(t, %{state | message: message, exception: [%{type: type, value: value}]})
+    case Regex.run(~r/^\((.+?)\) (.+)$/, message) do
+      nil -> transform(t, state)
+      [_, type, value] ->
+        transform(t, %{state | message: message,
+                               exception: [%{type: type, value: value}]})
+    end
   end
 
   defp transform_stacktrace_line([frame|t], state) do
-    [app, filename, lineno, function] =
-      case Regex.run(~r/^(\((.+?)\) )?(.+?):(\d+): (.+)$/, frame) do
-        [_, _, filename, lineno, function] -> [:unknown, filename, lineno, function]
-        [_, _, app, filename, lineno, function] -> [app, filename, lineno, function]
-      end
+    case Regex.run(~r/^(\((.+?)\) )?(.+?):(\d+): (.+)$/, frame) do
+      nil ->
+        transform(t, state)
+      [_, _, filename, lineno, function] ->
+        transform_stacktrace_line(:unknown, filename, lineno, function, t, state)
+      [_, _, app, filename, lineno, function] ->
+        transform_stacktrace_line(app, filename, lineno, function, t, state)
+    end
+  end
 
+  defp transform_stacktrace_line(app, filename, lineno, function, t, state) do
     unless state.culprit do
       state = %{state | culprit: function}
     end
