@@ -78,9 +78,7 @@ defmodule Raven do
     # sentry_timestamp=<current timestamp>,
     # sentry_key=<public api key>,
     # sentry_secret=<secret api key>
-    unless timestamp do
-      timestamp = unix_timestamp
-    end
+    timestamp = if timestamp, do: timestamp, else: unix_timestamp
     "Sentry sentry_version=#{@sentry_version}, sentry_client=#{@sentry_client}, sentry_timestamp=#{timestamp}, sentry_key=#{public_key}, sentry_secret=#{secret_key}"
   end
 
@@ -256,9 +254,7 @@ defmodule Raven do
   end
 
   defp transform_stacktrace_line(app, filename, lineno, function, t, state) do
-    unless state.culprit do
-      state = %{state | culprit: function}
-    end
+    state = if state.culprit, do: state, else: %{state | culprit: function}
 
     frame = %{
       filename: filename,
